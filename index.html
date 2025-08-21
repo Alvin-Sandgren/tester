@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battleship Game</title>
+</head>
+<body>
+    <h2>Battleship Game</h2>
+    <div>
+        <button id="resetBtn">Reset</button>
+    </div>
+    <div id="status" style="margin-bottom:10px; font-weight:bold;"></div>
+    <div style="display: flex; gap: 40px;">
+        <div>
+            <h3>Your Board (<span id="playerShipsLeft"></span> left)</h3>
+            <div id="playerGrid"></div>
+        </div>
+        <div>
+            <h3>Enemy Board (<span id="enemyShipsLeft"></span> left)</h3>
+            <div id="enemyGrid"></div>
+        </div>
+    </div>
+<script>
+const rows = 8, cols = 8;
+const shipSizes = [4, 3, 3, 2, 2];
+let playerShips = [], enemyShips = [];
+let playerHits = 0, enemyHits = 0;
+let gameOver = false;
+let playerTurn = true;
+
+function createEmptyGrid() {
+    return Array.from({length: rows}, () => Array(cols).fill(0));
+}
+
+function placeShips(grid, ships) {
+    for (let size of shipSizes) {
+        let placed = false;
+        while (!placed) {
+            let dir = Math.random() < 0.5 ? 'H' : 'V';
+            let r = Math.floor(Math.random() * (dir === 'H' ? rows : rows - size + 1));
+            let c = Math.floor(Math.random() * (dir === 'V' ? cols : cols - size + 1));
+            let canPlace = true;
+            for (let i = 0; i < size; i++) {
+                let rr = r + (dir === 'V' ? i : 0);
+                let cc = c + (dir === 'H' ? i : 0);
+                if (grid[rr][cc] !== 0) {
+                    canPlace = false;
+                    break;
+                }
+            }
+            if (canPlace) {
+                for (let i = 0; i < size; i++) {
+                    let rr = r + (dir === 'V' ? i : 0);
+                    let cc = c + (dir === 'H' ? i : 0);
+                    grid[rr][cc] = 1;
+                    ships.push({row: rr, col: cc, hit: false});
+                }
+                placed = true;
+            }
+        }
+    }
+}
+
+function renderGrid(container, grid, isEnemy) {
+    container.innerHTML = '';
+    for (let r = 0; r < rows; r++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        for (let c = 0; c < cols; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            if (!isEnemy) {
+                if (grid[r][c] === 1) cell.classList.add('ship');
+                if (grid[r][c] === 2) cell.textContent = '💥';
+                if (grid[r][c] === 3) cell.textContent = '•';
+            } else {
+                if (grid[r][c] === 2) cell.textContent = '💥';
+                if (grid[r][c] === 3) cell.textContent = '•';
+                if (playerTurn && !gameOver) cell.addEventListener('click', onEnemyCellClick);
+                if (!playerTurn || gameOver) cell.style.cursor = 'not-allowed';
+            }
+            rowDiv.appendChild(cell);
+        }
+        container.appendChild(rowDiv);
+    }
+}
+
+function updateStatus() {
+    document.getElementById('playerShipsLeft').textContent = playerShips.length - enemyHits;
+    document.getElementById('enemyShipsLeft').textContent = enemyShips.length - playerHits;
+    let status = '';
+    if (gameOver) {
+        status = playerHits === enemyShips.length ? '🎉 You win!' : '💀 Enemy wins!';
+    } else {
+        status = playerTurn ? 'Your turn!' : "Enemy's turn...";
+    }
+    document.getElementById('status').textContent = status;
+}
+
+function onEnemyCellClick(e) {
+    if (gameOver || !playerTurn) return;
+    const r = +e.target.dataset.row, c = +e.target.dataset.col;
+    if (enemyGrid[r][c] === 2 || enemyGrid[r][c] === 3) return;
+    if (enemyGrid[r][c] === 1) {
+        enemyGrid[r][c] = 2;
+        playerHits++;
+        renderGrid(enemyGridDiv, enemyGrid, true);
+        updateStatus();
+        if (playerHits === enemyShips.length) {
+            gameOver = true;
+            updateStatus();
+            return;
+        }
+        // Player gets another turn on hit
+    } else {
+        enemyGrid[r][c] = 3;
+        renderGrid(enemyGridDiv, enemyGrid, true);
+        playerTurn = false;
+        updateStatus();
+        setTimeout(enemyTurn, 800);
+    }
+}
+
+function enemyTurn() {
+    if (gameOver) return;
+    let r, c;
+    do {
+        r = Math.floor(Math.random() * rows);
+        c = Math.floor(Math.random() * cols);
+    } while (playerGrid[r][c] === 2 || playerGrid[r][c] === 3);
+    if (playerGrid[r][c] === 1) {
+        playerGrid[r][c] = 2;
+        enemyHits++;
+        renderGrid(playerGridDiv, playerGrid, false);
+        updateStatus();
+        if (enemyHits === playerShips.length) {
+            gameOver = true;
+            updateStatus();
+            return;
+        }
+        // Enemy gets another turn on hit
+        setTimeout(enemyTurn, 800);
+    } else {
+        playerGrid[r][c] = 3;
+        renderGrid(playerGridDiv, playerGrid, false);
+        playerTurn = true;
+        updateStatus();
+    }
+}
+
+function resetGame() {
+    playerGrid = createEmptyGrid();
+    enemyGrid = createEmptyGrid();
+    playerShips = [];
+    enemyShips = [];
+    playerHits = 0;
+    enemyHits = 0;
+    gameOver = false;
+    playerTurn = true;
+    placeShips(playerGrid, playerShips);
+    placeShips(enemyGrid, enemyShips);
+    renderGrid(playerGridDiv, playerGrid, false);
+    renderGrid(enemyGridDiv, enemyGrid, true);
+    updateStatus();
+}
+
+const playerGridDiv = document.getElementById('playerGrid');
+const enemyGridDiv = document.getElementById('enemyGrid');
+let playerGrid, enemyGrid;
+
+document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+resetGame();
+</script>
+<style>
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 0;
+    font-family: sans-serif;
+}
+#playerGrid, #enemyGrid {
+    display: inline-block;
+    margin: 10px auto;
+}
+.row {
+    display: flex;
+}
+.cell {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    cursor: pointer;
+    user-select: none;
+    background: #e0e0e0;
+    transition: background 0.2s;
+}
+.cell:hover {
+    background: #b0d0ff;
+}
+.ship {
+    background: #a0e0a0;
+}
+#resetBtn {
+    margin: 20px 10px 20px 0;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+}
+#status {
+    min-height: 24px;
+}
+</style>
+</body>
+</html>

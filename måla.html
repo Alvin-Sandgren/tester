@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Enkel Paint</title>
+    <style>
+        canvas { border: 1px solid #ccc; cursor: crosshair; }
+    </style>
+</head>
+<body>
+    <button id="resetBtn">Återställ</button>
+    <canvas id="myCanvas" width="2000" height="2000"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        let painting = false;
+
+        canvas.addEventListener('mousedown', () => painting = true);
+        canvas.addEventListener('mouseup', () => painting = false);
+        canvas.addEventListener('mouseleave', () => painting = false);
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (!painting) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            ctx.fillRect(x, y, 2, 2);
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+    </script>
+</body>
+</html>
