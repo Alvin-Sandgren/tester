@@ -14,6 +14,27 @@ const houses = [
   {x:1800,y:240,w:130,h:90,c:'#FFD700'}
 ];
 
+// Kullens position efter sista huset
+let lastHouse = houses[houses.length-1];
+let hillX = lastHouse.x + lastHouse.w + 200; // mittpunkt för kullen
+let hillY = canvas.height - 140; 
+let hillR = 120;
+
+// Funktion för att rita en gubbe
+function drawMan(mx, my) {
+  ctx.fillStyle='#ffe0bd';
+  ctx.beginPath();
+  ctx.arc(mx,my-50,12,0,Math.PI*2); // huvud
+  ctx.fill();
+
+  ctx.fillStyle='orange';
+  ctx.fillRect(mx-8,my-40,16,35); // kropp
+
+  ctx.fillStyle='black';
+  ctx.fillRect(mx-8,my-5,6,20); // vänster ben
+  ctx.fillRect(mx+2,my-5,6,18); // höger ben
+}
+
 // Funktion för att rita scenen
 function draw() {
   // Bakgrund: himmel
@@ -33,10 +54,17 @@ function draw() {
   for (let i = 0; i < canvas.width; i += 40) {
       ctx.fillRect(i, canvas.height - 30, 20, 5);
     }
-    ctx.fillStyle = "rgba(78, 79, 82, 1)";
+  ctx.fillStyle = "rgba(78, 79, 82, 1)";
   for (let i = 0; i < canvas.width; i += 120) {
       ctx.fillRect(i, canvas.height - 30, 20, 5);
     }
+
+  // === Rita kulle ===
+  ctx.beginPath();
+  ctx.arc(hillX - scrollX, hillY, hillR, Math.PI, 0, false); 
+  ctx.fillStyle = "#228B22";
+  ctx.fill();
+  ctx.closePath();
 
   // Rita alla hus
   houses.forEach(h=>{
@@ -74,14 +102,19 @@ function draw() {
   ctx.arc(lx+4,ly-110,15,0,7); // lampa
   ctx.fill();
 
-  // En gubbe framför hus nr 4
-  let mx=houses[3].x+houses[3].w/2-scrollX, my=canvas.height-60;
-  ctx.fillStyle='#ffe0bd';
-  ctx.beginPath();
-  ctx.arc(mx,my-50,12,0,7); // huvud
-  ctx.fill();
-  ctx.fillStyle='blue';
-  ctx.fillRect(mx-8,my-40,16,35); // kropp
+  // Gubbe framför hus nr 4
+  let mx1=houses[3].x+houses[3].w/2-scrollX; 
+  let my1=canvas.height-60;
+  drawMan(mx1,my1);
+
+  // Ny gubbe på kullen
+let mx2 = hillX - hillR/2 - scrollX; // starta lite till vänster på kullen
+let dx = mx2 - (hillX - scrollX);    // avstånd från kullens mittpunkt
+let angle = Math.acos(dx / hillR);   // vinkel på cirkeln
+let my2 = hillY - Math.sin(angle) * hillR; // rätt höjd
+
+drawMan(mx2, my2);
+
 }
 
 // Rita scenen första gången
@@ -98,3 +131,4 @@ document.addEventListener('keydown',e=>{
     draw();
   }
 });
+
