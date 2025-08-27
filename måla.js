@@ -1,86 +1,90 @@
-const canvas = document.getElementById("minCanvas");
-const ctx = canvas.getContext("2d");
+// Hämta canvas och context
+const canvas = document.getElementById('minCanvas');
+const ctx = canvas.getContext('2d');
 
-// Byggnad
-function drawBuilding(x, y, w, h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-    ctx.fillStyle = "#ccc";
-    ctx.fillRect(x + 5, y + 5, w - 10, 8); // Tak
-    ctx.fillStyle = "#654321";
-    ctx.fillRect(x + w / 2 - 7, y + h - 18, 14, 18); // Dörr
-    ctx.fillStyle = "#aee7f8";
-    [0, 1].forEach(i => [0, 1].forEach(j =>
-        ctx.fillRect(x + 10 + i * (w - 30), y + 20 + j * 25, 16, 16)
-    ));
-}
+// Hur långt vi "gått" i världen (scroll)
+let scrollX = 0;
 
-// Väg
-function drawRoad(x, y, w, h) {
-    ctx.fillStyle = "#444";
-    ctx.fillRect(x, y, w, h);
-    ctx.save();
-    ctx.setLineDash([10, 10]);
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
+// Lista med hus (x-position, höjd från botten, bredd, höjd, färg)
+const houses = [
+  {x:200,y:250,w:120,h:100,c:'#FF8C00'},
+  {x:600,y:220,w:100,h:70,c:'#8A2BE2'},
+  {x:1000,y:260,w:140,h:110,c:'#228B22'},
+  {x:1500,y:230,w:110,h:80,c:'#DA70D6'},
+  {x:1800,y:240,w:130,h:90,c:'#FFD700'}
+];
+
+// Funktion för att rita scenen
+function draw() {
+  // Bakgrund: himmel
+  ctx.fillStyle='#87CEEB';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Gräs
+  ctx.fillStyle='#3CB371';
+  ctx.fillRect(0,canvas.height-150,canvas.width,200);
+
+  // Väg
+  ctx.fillStyle='#555';
+  ctx.fillRect(0,canvas.height-60,canvas.width,60);
+
+  // Rita alla hus
+  houses.forEach(h=>{
+    let x=h.x-scrollX, y=canvas.height-h.y;
+
+    // Husets kropp
+    ctx.fillStyle=h.c; 
+    ctx.fillRect(x,y,h.w,h.h);
+
+    // Tak (triangel)
+    ctx.fillStyle='#333';
     ctx.beginPath();
-    ctx.moveTo(x + w / 2, y);
-    ctx.lineTo(x + w / 2, y + h);
-    ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle = "#bbb";
-    [x - 8, x + w].forEach(xp => ctx.fillRect(xp, y, 8, h));
-}
-
-// Träd
-function drawTree(x, y) {
-    ctx.fillStyle = "#8d5524";
-    ctx.fillRect(x - 3, y, 6, 18);
-    ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);
-    ctx.fillStyle = "#2ecc40";
+    ctx.moveTo(x,y);
+    ctx.lineTo(x+h.w/2,y-40);
+    ctx.lineTo(x+h.w,y);
     ctx.fill();
+
+    // Dörr
+    ctx.fillStyle='#654321';
+    ctx.fillRect(x+h.w/2-15,y+h.h-40,30,40);
+
+    // Fönster
+    ctx.fillStyle='#B0E0E6';
+    ctx.fillRect(x+10,y+20,30,25);
+    ctx.strokeStyle='#000';
+    ctx.strokeRect(x+10,y+20,30,25);
+  });
+
+  // Lykstolpe bredvid hus nr 2
+  let lx=houses[1].x+houses[1].w+40-scrollX, ly=canvas.height-60;
+  ctx.fillStyle='#444';
+  ctx.fillRect(lx,ly-100,8,100); // stolpe
+  ctx.fillStyle='#FFD700';
+  ctx.beginPath();
+  ctx.arc(lx+4,ly-110,15,0,7); // lampa
+  ctx.fill();
+
+  // En gubbe framför hus nr 4
+  let mx=houses[3].x+houses[3].w/2-scrollX, my=canvas.height-60;
+  ctx.fillStyle='#ffe0bd';
+  ctx.beginPath();
+  ctx.arc(mx,my-50,12,0,7); // huvud
+  ctx.fill();
+  ctx.fillStyle='blue';
+  ctx.fillRect(mx-8,my-40,16,35); // kropp
 }
 
-// Bil
-function drawCar(x, y, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, 28, 14);
-    ctx.fillStyle = "#222";
-    [x + 6, x + 22].forEach(xp => {
-        ctx.beginPath();
-        ctx.arc(xp, y + 14, 4, 0, Math.PI * 2);
-        ctx.fill();
-    });
-}
+// Rita scenen första gången
+draw();
 
-// Bakgrund
-ctx.fillStyle = "#8fd694";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-// Vägar
-drawRoad(190, 0, 40, canvas.height);
-drawRoad(0, 190, canvas.width, 40);
-
-// Byggnader
-const colors = ["#b5651d", "#e67e22", "#2980b9", "#7f8c8d", "#c0392b"];
-for (let row = 0; row < 4; row++)
-    for (let col = 0; col < 4; col++)
-        if (row !== 1 && col !== 1)
-            drawBuilding(40 + col * 100, 40 + row * 100, 80, 80, colors[Math.random() * colors.length | 0]);
-
-// Träd
-[...Array(6)].forEach((_, i) => {
-    drawTree(170, 60 + i * 60);
-    drawTree(270, 60 + i * 60);
-    drawTree(60 + i * 60, 170);
-    drawTree(60 + i * 60, 270);
+// Lyssna på tangenttryckningar
+document.addEventListener('keydown',e=>{
+  if(e.key==='d'){ // gå höger
+    scrollX+=10;
+    draw();
+  }
+  if(e.key==='a'){ // gå vänster
+    scrollX=Math.max(0,scrollX-10);
+    draw();
+  }
 });
-
-// Bilar
-[
-    [200, 60, "#e74c3c"],
-    [195, 250, "#3498db"],
-    [120, 200, "#f1c40f"],
-    [320, 210, "#2ecc71"]
-].forEach(([x, y, c]) => drawCar(x, y, c));
