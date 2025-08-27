@@ -28,6 +28,16 @@ function draw() {
   ctx.fillStyle='#555';
   ctx.fillRect(0,canvas.height-60,canvas.width,60);
 
+  // Vägmarkeringar
+  ctx.fillStyle = "rgba(255, 255, 255, 1)";
+  for (let i = 0; i < canvas.width; i += 40) {
+      ctx.fillRect(i, canvas.height - 30, 20, 5);
+    }
+    ctx.fillStyle = "rgba(78, 79, 82, 1)";
+  for (let i = 0; i < canvas.width; i += 120) {
+      ctx.fillRect(i, canvas.height - 30, 20, 5);
+    }
+
   // Rita alla hus
   houses.forEach(h=>{
     let x=h.x-scrollX, y=canvas.height-h.y;
