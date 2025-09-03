@@ -2,8 +2,7 @@ const canvas = document.getElementById('minCanvas');
 const ctx = canvas.getContext('2d');
 
 let scrollX = 0;
-
-let ball = { x: 400, y: 300, r: 40, speed: 5 };
+let ball = { x: 400, y: 300, r: 60, speed: 5 };
 
 const houses = [
   {x:200,y:250,w:120,h:100,c:'#FF8C00'},
@@ -24,14 +23,19 @@ function circle(x, y, r, color) {
   ctx.fill();
 }
 
-function drawMan(mx, my) {
-  circle(mx, my-50, 12, '#ffe0bd');
-  ctx.fillStyle='orange';
+function dist(ax, ay, bx, by) {
+  return Math.hypot(ax-bx, ay-by);
+}
+
+function drawMan(mx, my, red=false) {
+  circle(mx, my-50, 12, red ? 'red' : '#ffe0bd'); 
+  ctx.fillStyle = red ? 'red' : 'orange';        
   ctx.fillRect(mx-8,my-40,16,35);
-  ctx.fillStyle='black';
+  ctx.fillStyle='black';                        
   ctx.fillRect(mx-8,my-5,6,20);
   ctx.fillRect(mx+2,my-5,6,18);
 }
+
 
 function draw() {
   ctx.fillStyle='#87CEEB'; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -55,13 +59,9 @@ function draw() {
     ctx.strokeStyle='#000'; ctx.strokeRect(x+10,y+20,30,25);
   });
 
-  let lx=houses[1].x+houses[1].w+40-scrollX, ly=canvas.height-60;
-  ctx.fillStyle='#444'; ctx.fillRect(lx,ly-100,8,100);
-  circle(lx+4, ly-110, 15, '#FFD700');
-
-  let mx1=houses[3].x+houses[3].w/2-scrollX; 
-  let my1=canvas.height-60;
-  drawMan(mx1,my1);
+  let mx1=houses[3].x+houses[3].w/2-scrollX, my1=canvas.height-60;
+  let hit = dist(ball.x, ball.y, mx1, my1-50) < ball.r + 12;
+  drawMan(mx1,my1, hit);
 }
 
 function moveBall() {
