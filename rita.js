@@ -12,10 +12,6 @@ const houses = [
   {x:1800,y:240,w:130,h:90,c:'#FFD700'}
 ];
 
-let keys = {};
-document.addEventListener('keydown', e => keys[e.key] = true);
-document.addEventListener('keyup', e => keys[e.key] = false);
-
 function circle(x, y, r, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -35,7 +31,6 @@ function drawMan(mx, my, red=false) {
   ctx.fillRect(mx-8,my-5,6,20);
   ctx.fillRect(mx+2,my-5,6,18);
 }
-
 
 function draw() {
   ctx.fillStyle='#87CEEB'; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -63,6 +58,10 @@ function draw() {
   let hit = dist(ball.x, ball.y, mx1, my1-50) < ball.r + 12;
   drawMan(mx1,my1, hit);
 }
+
+let keys = {};
+document.addEventListener('keydown', e => keys[e.key] = true);
+document.addEventListener('keyup', e => keys[e.key] = false);
 
 function moveBall() {
   if (keys['d']) scrollX += 10;
