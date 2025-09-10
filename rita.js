@@ -2,7 +2,7 @@ const canvas = document.getElementById('minCanvas');
 const ctx = canvas.getContext('2d');
 
 let scrollX = 0;
-let ball = { x: 400, y: 300, r: 60, speed: 5 };
+let ball = { x: 260, y: 285, r: 60, speed: 5 };
 
 const houses = [
   {x:200,y:250,w:120,h:100,c:'#FF8C00'},
@@ -57,6 +57,8 @@ function draw() {
   let mx1=houses[3].x+houses[3].w/2-scrollX, my1=canvas.height-60;
   let hit = dist(ball.x, ball.y, mx1, my1-50) < ball.r + 12;
   drawMan(mx1,my1, hit);
+
+  circle(enemy.x, enemy.y, enemy.r, enemy.color);
 }
 
 let keys = {};
@@ -64,10 +66,12 @@ document.addEventListener('keydown', e => keys[e.key] = true);
 document.addEventListener('keyup', e => keys[e.key] = false);
 
 function moveBall() {
-  if (keys['d']) scrollX += 10;
-  if (keys['a']) scrollX = Math.max(0, scrollX-10);
+  if (keys['d']) ball.x += 10;
+  if (keys['a']) ball.x += -10;
   if (keys['w']) ball.y -= ball.speed;
   if (keys['s']) ball.y += ball.speed;
+  if (keys['ArrowRight']) scrollX += 10;
+  if (keys['ArrowLeft']) scrollX -= 10;
 }
 
 function clampBall() {
@@ -75,9 +79,19 @@ function clampBall() {
   ball.y = Math.max(ball.r, Math.min(canvas.height - ball.r, ball.y));
 }
 
+let enemy = { x: 100, y: 100, r: 20, dx: 4, dy: 3, color: 'red' };
+
+function moveEnemy() {
+  enemy.x += enemy.dx;
+  enemy.y += enemy.dy;
+  if (enemy.x - enemy.r < 0 || enemy.x + enemy.r > canvas.width) enemy.dx *= -1;
+  if (enemy.y - enemy.r < 0 || enemy.y + enemy.r > canvas.height) enemy.dy *= -1;
+}
+
 function loop() {
   moveBall();
   clampBall();
+  moveEnemy();
   draw();
   requestAnimationFrame(loop);
 }
