@@ -2,7 +2,62 @@ const canvas = document.getElementById('minCanvas');
 const ctx = canvas.getContext('2d');
 
 let scrollX = 0;
-let ball = { x: 260, y: 285, r: 60, speed: 5 };
+let keys = {};
+
+class Ball {
+  constructor(x, y, r, speed, color) {
+    this.x = x;
+    this.y = y;
+    this.r = r;
+    this.speed = speed;
+    this.color = color;
+  }
+  move() {
+    if (keys['d']) this.x += 10;
+    if (keys['a']) this.x -= 10;
+    if (keys['w']) this.y -= this.speed;
+    if (keys['s']) this.y += this.speed;
+    this.clamp();
+  }
+  clamp() {
+    this.x = Math.max(this.r, Math.min(canvas.width - this.r, this.x));
+    this.y = Math.max(this.r, Math.min(canvas.height - this.r, this.y));
+  }
+  draw() {
+    circle(this.x, this.y, this.r, this.color);
+  }
+}
+
+class Enemy {
+  constructor(x, y, r, dx, dy, color = "red") {
+    this.x = x;
+    this.y = y;
+    this.r = r;
+    this.dx = dx;
+    this.dy = dy;
+    this.color = color;
+  }
+  move() {
+    this.x += this.dx;
+    this.y += this.dy;
+    if (this.x - this.r < 0 || this.x + this.r > canvas.width) this.dx *= -1;
+    if (this.y - this.r < 0 || this.y + this.r > canvas.height) this.dy *= -1;
+  }
+  draw() {
+    circle(this.x, this.y, this.r, this.color);
+  }
+}
+
+class Man {
+  constructor(x, y, red = false) {
+    this.x = x;
+    this.y = y;
+    this.red = red;
+  }
+  draw() {
+    drawMan(this.x, this.y, this.red);
+  }
+}
 
 const houses = [
   {x:200,y:250,w:120,h:100,c:'#FF8C00'},
@@ -42,7 +97,7 @@ function draw() {
   ctx.fillStyle="#4E4F52";
   for (let i=0;i<canvas.width;i+=120) ctx.fillRect(i, canvas.height-30,20,5);
 
-  circle(ball.x, ball.y, ball.r, "yellow");
+  objects.forEach(obj => obj instanceof Ball && obj.draw());
 
   houses.forEach(h=>{
     let x=h.x-scrollX, y=canvas.height-h.y;
@@ -55,43 +110,37 @@ function draw() {
   });
 
   let mx1=houses[3].x+houses[3].w/2-scrollX, my1=canvas.height-60;
-  let hit = dist(ball.x, ball.y, mx1, my1-50) < ball.r + 12;
-  drawMan(mx1,my1, hit);
+  let hit = dist(objects[0].x, objects[0].y, mx1, my1-50) < objects[0].r + 12;
+  let man = new Man(mx1, my1, hit);
+  man.draw();
 
-  circle(enemy.x, enemy.y, enemy.r, enemy.color);
+  objects.forEach(obj => obj instanceof Enemy && obj.draw());
 }
 
-let keys = {};
 document.addEventListener('keydown', e => keys[e.key] = true);
 document.addEventListener('keyup', e => keys[e.key] = false);
 
-function moveBall() {
-  if (keys['d']) ball.x += 10;
-  if (keys['a']) ball.x += -10;
-  if (keys['w']) ball.y -= ball.speed;
-  if (keys['s']) ball.y += ball.speed;
+function moveObjects() {
+  objects.forEach(obj => obj.move && obj.move());
   if (keys['ArrowRight']) scrollX += 10;
   if (keys['ArrowLeft']) scrollX -= 10;
 }
 
-function clampBall() {
-  ball.x = Math.max(ball.r, Math.min(canvas.width - ball.r, ball.x));
-  ball.y = Math.max(ball.r, Math.min(canvas.height - ball.r, ball.y));
-}
-
-let enemy = { x: 100, y: 100, r: 20, dx: 4, dy: 3, color: 'red' };
-
-function moveEnemy() {
-  enemy.x += enemy.dx;
-  enemy.y += enemy.dy;
-  if (enemy.x - enemy.r < 0 || enemy.x + enemy.r > canvas.width) enemy.dx *= -1;
-  if (enemy.y - enemy.r < 0 || enemy.y + enemy.r > canvas.height) enemy.dy *= -1;
-}
+let objects = [
+  new Ball(260, 285, 60, 5, 'yellow'),
+  new Ball(26, 285, 60, 5, 'lightgreen'),
+  new Enemy(100, 100, 20, 20, 12, 'red'),
+  new Enemy(300, 200, 25, 10, 15, 'blue'),
+  new Enemy(350, 20, 25, 10, 15, 'green'),
+  new Enemy(50, 300, 25, 10, 15, 'orange'),
+  new Enemy(10, 300, 25, 17, 15, 'black'),
+  new Enemy(250, 300, 25, 19, 15, 'white'),
+  new Enemy(240, 300, 25, 9, 15, 'lightblue'),
+  new Enemy(90, 300, 25, 7, 15, 'purple'),
+];
 
 function loop() {
-  moveBall();
-  clampBall();
-  moveEnemy();
+  moveObjects();
   draw();
   requestAnimationFrame(loop);
 }
